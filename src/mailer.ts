@@ -11,15 +11,19 @@ export async function sendEmail(stocks: string[]) {
       pass: process.env.EMAIL_PASS
     }
   });
+  let textdata;
+  if (stocks.length === 0) {
+    textdata = "No stocks found today matching the condition.";
+  }else {
+    textdata = "RSI Alert triggered for:\n\n" + stocks.join("\n");
+  }
 
   const message = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_TO,
     cc: process.env.EMAIL_CC,
     subject: "Stock Market RSI Alert by Shreyansh",
-    text:
-      "RSI Alert triggered for:\n\n" +
-      stocks.join("\n")
+    text: textdata
   };
 
   await transporter.sendMail(message);

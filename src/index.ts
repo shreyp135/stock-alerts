@@ -1,4 +1,4 @@
-import cron from "node-cron";
+// import cron from "node-cron";
 import dotenv from "dotenv";
 import { scanStocks } from "./scanner";
 import { sendEmail } from "./mailer";
@@ -10,14 +10,16 @@ async function job() {
   if (alerts.length > 0) {
     await sendEmail(alerts);
     console.log("Email sent:", alerts);
+
   } else {
+    await sendEmail([]);
     console.log("No alerts");
   }
 }
 
-cron.schedule("0 20 * * *", job, {
-  timezone: "Asia/Kolkata"
-});
+// cron.schedule("0 20 * * *", job, {
+//   timezone: "Asia/Kolkata"
+// });
 
 console.log("NIFTY RSI scanner running...");
 // job();
