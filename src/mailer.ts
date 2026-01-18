@@ -15,7 +15,8 @@ export async function sendEmail(stocks: string[]) {
   const message = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_TO,
-    subject: "NIFTY RSI ALERT",
+    cc: process.env.EMAIL_CC,
+    subject: "Stock Market RSI Alert by Shreyansh",
     text:
       "RSI Alert triggered for:\n\n" +
       stocks.join("\n")

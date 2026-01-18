@@ -15,9 +15,9 @@ async function job() {
   }
 }
 
-
-cron.schedule("40 15 * * 1-5", job, {
+cron.schedule("0 20 * * *", job, {
   timezone: "Asia/Kolkata"
 });
 
 console.log("NIFTY RSI scanner running...");
+// job();

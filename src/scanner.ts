@@ -1,6 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 import { calculateRSI } from "./rsi";
-import { NIFTY_50 } from "./stocks";
+import { STOCKS } from "./stocks";
 
 const yf = new YahooFinance();
 
@@ -14,7 +14,7 @@ function daysAgo(days: number): string {
 }
 
 /**
- * Fetch closing prices using period-based window
+ * Fetch closing prices (TypeScript-safe, no deprecated APIs)
  */
 async function fetchCloses(
   symbol: string,
@@ -37,16 +37,40 @@ async function fetchCloses(
 }
 
 /**
- * Scan all NIFTY 50 stocks for RSI condition
+ * Detect RSI bottom reversal:
+ * - RSI dipped below 40
+ * - Formed a bottom
+ * - RSI is now rising from that bottom
+ */
+function hasDailyRSIBottomReversal(dailyRSI: number[]): boolean {
+  const LOOKBACK = 15;
+
+  if (dailyRSI.length < LOOKBACK + 2) return false;
+
+  const recentRSI = dailyRSI.slice(-LOOKBACK);
+
+  const minRSI = Math.min(...recentRSI);
+  const minIndex = recentRSI.indexOf(minRSI);
+
+  const dippedBelow40 = minRSI < 40;
+  const bottomNotLatest = minIndex < recentRSI.length - 1;
+  const isRisingFromBottom =
+    recentRSI[recentRSI.length - 1] > recentRSI[minIndex];
+
+  return dippedBelow40 && bottomNotLatest && isRisingFromBottom;
+}
+
+/**
+ * Scan all stocks
  */
 export async function scanStocks(): Promise<string[]> {
   const alerts: string[] = [];
 
-  for (const symbol of NIFTY_50) {
+  for (const symbol of STOCKS) {
     try {
-      // Lookback windows (safe for RSI 14)
-      const dailyCloses = await fetchCloses(symbol, "1d", 180);   // ~6 months
-      const weeklyCloses = await fetchCloses(symbol, "1wk", 730); // ~2 years
+      // Lookback windows
+      const dailyCloses = await fetchCloses(symbol, "1d", 180);    // ~6 months
+      const weeklyCloses = await fetchCloses(symbol, "1wk", 730);  // ~2 years
       const monthlyCloses = await fetchCloses(symbol, "1mo", 1825); // ~5 years
 
       if (
@@ -61,16 +85,15 @@ export async function scanStocks(): Promise<string[]> {
       const weeklyRSI = calculateRSI(weeklyCloses);
       const monthlyRSI = calculateRSI(monthlyCloses);
 
-      const dailyPrev = dailyRSI[dailyRSI.length - 2];
-      const dailyNow = dailyRSI[dailyRSI.length - 1];
       const weeklyNow = weeklyRSI[weeklyRSI.length - 1];
       const monthlyNow = monthlyRSI[monthlyRSI.length - 1];
+
+      const dailyBottomReversal = hasDailyRSIBottomReversal(dailyRSI);
 
       if (
         monthlyNow > 60 &&
         weeklyNow > 60 &&
-        dailyPrev < 40 &&
-        dailyNow > dailyPrev
+        dailyBottomReversal
       ) {
         alerts.push(symbol);
       }
