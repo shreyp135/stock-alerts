@@ -7,8 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "tsc src/index.ts"
+    "build": "",
+    "start": "npx tsx src/index.ts"
   },
   "dependencies": {
     "@types/nodemailer": "^7.0.4",
